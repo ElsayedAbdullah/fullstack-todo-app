@@ -1,4 +1,8 @@
-import { Route, createBrowserRouter, createRoutesFromElements } from "react-router-dom";
+import {
+  Route,
+  createBrowserRouter,
+  createRoutesFromElements,
+} from "react-router-dom";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
 import PageNotFound from "../pages/PageNotFound";
 import RootLayout from "../pages/Layout";
@@ -6,9 +10,9 @@ import ErrorHandler from "../components/errors/ErrorHandler";
 import HomePage from "../pages";
 import LoginPage from "../pages/Login";
 import RegisterPage from "../pages/Register";
+import ProfilePage from "../pages/Profile";
 
-const isLoggedIn = false;
-const userData: { email: string } | null = isLoggedIn ? { email: "email@gmail.com" } : null;
+const userData = JSON.parse(localStorage.getItem("loggedInUser")!);
 
 const router = createBrowserRouter(
   createRoutesFromElements(
@@ -18,15 +22,23 @@ const router = createBrowserRouter(
         <Route
           index
           element={
-            <ProtectedRoute isAllowed={isLoggedIn} redirectPath="/login" data={userData}>
+            <ProtectedRoute isAllowed={userData?.jwt} redirectPath="/login">
               <HomePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="profile"
+          element={
+            <ProtectedRoute isAllowed={userData} redirectPath="/">
+              <ProfilePage />
             </ProtectedRoute>
           }
         />
         <Route
           path="login"
           element={
-            <ProtectedRoute isAllowed={!isLoggedIn} redirectPath="/" data={userData}>
+            <ProtectedRoute isAllowed={!userData} redirectPath="/">
               <LoginPage />
             </ProtectedRoute>
           }
@@ -34,7 +46,7 @@ const router = createBrowserRouter(
         <Route
           path="register"
           element={
-            <ProtectedRoute isAllowed={!isLoggedIn} redirectPath="/login" data={userData}>
+            <ProtectedRoute isAllowed={!userData} redirectPath="/login">
               <RegisterPage />
             </ProtectedRoute>
           }
