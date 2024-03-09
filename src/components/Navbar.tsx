@@ -13,7 +13,7 @@ const Navbar = () => {
   };
   return (
     <nav className="bg-white border-gray-200 dark:bg-gray-900">
-      <div className="max-w-screen-xl flex flex-wrap items-center justify-between mx-auto p-4">
+      <div className="max-w-screen-lg flex flex-wrap items-center justify-between mx-auto p-4">
         <Link
           to="/"
           className="flex items-center space-x-3 rtl:space-x-reverse"
@@ -23,7 +23,10 @@ const Navbar = () => {
           </span>
         </Link>
         {userData ? (
-          <div className="flex relative items-center md:order-2 space-x-3 rtl:space-x-reverse">
+          <div className="flex relative items-center md:order-2 space-x-5 rtl:space-x-reverse">
+            <NavLink className="text-white" to={"/todos"}>
+              Todos
+            </NavLink>
             <NavLink className="text-white" to={"/profile"}>
               Profile
             </NavLink>

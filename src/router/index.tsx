@@ -11,6 +11,7 @@ import HomePage from "../pages";
 import LoginPage from "../pages/Login";
 import RegisterPage from "../pages/Register";
 import ProfilePage from "../pages/Profile";
+import Todos from "../pages/Todos";
 
 const userData = JSON.parse(localStorage.getItem("loggedInUser")!);
 
@@ -32,6 +33,14 @@ const router = createBrowserRouter(
           element={
             <ProtectedRoute isAllowed={userData} redirectPath="/">
               <ProfilePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="todos"
+          element={
+            <ProtectedRoute isAllowed={userData} redirectPath="/">
+              <Todos />
             </ProtectedRoute>
           }
         />

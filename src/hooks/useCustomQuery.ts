@@ -12,7 +12,8 @@ export const useCustomQuery = ({ queryKey, url, config }: IProps) => {
   return useQuery({
     queryKey,
     queryFn: async () => {
-      return await axiosInstance.get(url, config);
+      const { data } = await axiosInstance.get(url, config);
+      return data;
     },
   });
 };

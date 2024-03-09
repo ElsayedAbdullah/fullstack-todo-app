@@ -6,11 +6,15 @@ import { ITodo } from "../interfaces";
 import { axiosInstance } from "../config/axios.config";
 import DeleteModal from "./DeleteModal";
 import EditModal from "./EditModal";
+import TodoSkeleton from "./ui/TodoSkeleton";
+import AddModal from "./AddModal";
 
 const TodoList = () => {
   const [isOpenEditModal, setIsOpenEditModal] = useState(false);
+  const [isOpenAddModal, setIsOpenAddModal] = useState(false);
   const [isOpenDeleteModal, setIsOpenDeleteModal] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [queryVersion, setQueryVersion] = useState<number>(1);
   const [todoToEdit, setTodoToEdit] = useState<ITodo>({
     id: 0,
     title: "",
@@ -18,7 +22,7 @@ const TodoList = () => {
   });
 
   const { isLoading, data } = useCustomQuery({
-    queryKey: ["todoList", `${todoToEdit.id}`],
+    queryKey: ["todoList", `${queryVersion}`],
     url: "/users/me?populate=todos",
     config: {
       headers: {
@@ -26,6 +30,14 @@ const TodoList = () => {
       },
     },
   });
+
+  // Add Modal Handlers
+  const closeAddModal = () => {
+    setIsOpenAddModal(false);
+  };
+  const openAddModal = () => {
+    setIsOpenAddModal(true);
+  };
 
   // Edit Modal Handlers
   const closeEditModal = () => {
@@ -42,47 +54,10 @@ const TodoList = () => {
     setTodoToEdit({ id: 0, title: "", body: "" });
     setIsOpenDeleteModal(false);
   };
+
   const openDeleteModal = (todo: ITodo) => {
     setTodoToEdit(todo);
     setIsOpenDeleteModal(true);
-  };
-
-  // Update Todo
-  const onChangeEditHandler = (
-    e:
-      | React.ChangeEvent<HTMLInputElement>
-      | React.ChangeEvent<HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    setTodoToEdit({
-      ...todoToEdit,
-      [name]: value,
-    });
-  };
-
-  const submitEditHandler = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    const { title, body } = todoToEdit;
-
-    if (!title) return;
-    setIsUpdating(true);
-    try {
-      await axiosInstance.put(
-        `/todos/${todoToEdit.id}`,
-        { data: { title, body } },
-        {
-          headers: {
-            Authorization: `Bearer ${userData.jwt}`,
-          },
-        }
-      );
-    } catch (error) {
-      console.log(error);
-    } finally {
-      setIsUpdating(false);
-    }
-
-    closeEditModal();
   };
 
   // Delete Todo
@@ -91,30 +66,61 @@ const TodoList = () => {
 
     setIsUpdating(true);
     try {
-      await axiosInstance.delete(`/todos/${todoToEdit.id}`, {
+      const { status } = await axiosInstance.delete(`/todos/${todoToEdit.id}`, {
         headers: {
           Authorization: `Bearer ${userData.jwt}`,
         },
       });
+      if (status === 200) {
+        closeDeleteModal();
+        setQueryVersion((prev) => prev + 1);
+      }
     } catch (error) {
       console.log(error);
     } finally {
       setIsUpdating(false);
     }
-
-    closeDeleteModal();
   };
 
-  if (isLoading) return <h3>loading....</h3>;
+  if (isLoading)
+    return (
+      <div className="space-y-4 divide-y divide-gray-200 rounded animate-pulse dark:divide-gray-700">
+        {Array.from({ length: 3 }, (_, i) => (
+          <TodoSkeleton key={i} />
+        ))}
+      </div>
+    );
 
   return (
     <>
-      <div className="space-y-1">
-        {data?.data.todos.length ? (
-          data?.data.todos.map((todo: { id: number; title: string }) => (
+      <div className="flex items-center justify-center my-10">
+        {isLoading ? (
+          <div className="flex animate-pulse items-center space-x-3">
+            <div className="w-24 h-9 bg-gray-300 rounded-md dark:bg-gray-500"></div>
+            <div className="w-32 h-9 bg-gray-300 rounded-md dark:bg-gray-500"></div>
+          </div>
+        ) : (
+          <div className="space-x-3">
+            <Button type="button" size={"sm"} onClick={openAddModal}>
+              Add Todo
+            </Button>
+            {/* <Button
+              type="button"
+              size={"sm"}
+              variant={"outline"}
+              onClick={() => generateTodos(100)}
+            >
+              generate Todos
+            </Button> */}
+          </div>
+        )}
+      </div>
+      <div className="space-y-4">
+        {data?.todos.length ? (
+          data?.todos.map((todo: { id: number; title: string }) => (
             <div
               key={todo.id}
-              className="flex items-center justify-between hover:bg-gray-100 duration-300 p-3 rounded-md even:bg-gray-100"
+              className="flex items-center justify-between hover:bg-gray-100 duration-300 p-4 rounded-md even:bg-gray-100"
             >
               <p className="w-full font-semibold">{todo.title}</p>
               <div className="flex items-center justify-end w-full space-x-3">
@@ -141,15 +147,25 @@ const TodoList = () => {
         )}
       </div>
 
+      {/* Add MODAL */}
+      <AddModal
+        isUpdating={isUpdating}
+        closeAddModal={closeAddModal}
+        isOpenAddModal={isOpenAddModal}
+        setIsOpenAddModal={setIsOpenAddModal}
+        setQueryVersion={setQueryVersion}
+        setIsUpdating={setIsUpdating}
+      />
+
       {/* EDIT MODAL */}
       <EditModal
         isUpdating={isUpdating}
         closeEditModal={closeEditModal}
         isOpenEditModal={isOpenEditModal}
         setIsOpenEditModal={setIsOpenEditModal}
-        submitEditHandler={submitEditHandler}
-        onChangeEditHandler={onChangeEditHandler}
         todoToEdit={todoToEdit}
+        setIsUpdating={setIsUpdating}
+        setQueryVersion={setQueryVersion}
       />
 
       {/* DELETE MODAL */}

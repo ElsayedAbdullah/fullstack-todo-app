@@ -1,5 +1,4 @@
 import { SubmitHandler, useForm } from "react-hook-form";
-import { IFormInput, ITodo } from "../interfaces";
 import Button from "./ui/Button";
 import Input from "./ui/Input";
 import Modal from "./ui/Modal";
@@ -7,40 +6,39 @@ import Textarea from "./ui/Textarea";
 import InputErrorMsg from "./ui/InputErrorMsg";
 import { axiosInstance } from "../config/axios.config";
 import { userData } from "../data";
+import toast from "react-hot-toast";
+import { IFormInput } from "../interfaces";
 
-interface IEditModal {
-  todoToEdit: ITodo;
-  isOpenEditModal: boolean;
+interface IAddModal {
+  isOpenAddModal: boolean;
   isUpdating: boolean;
-  closeEditModal: () => void;
-  setIsOpenEditModal: (val: boolean) => void;
+  closeAddModal: () => void;
+  setIsOpenAddModal: (val: boolean) => void;
   setIsUpdating: (val: boolean) => void;
   setQueryVersion: (update: (prev: number) => number) => void;
 }
 
-const EditModal = ({
-  todoToEdit,
-  isOpenEditModal,
-  closeEditModal,
-  setIsOpenEditModal,
-  setIsUpdating,
+const AddModal = ({
+  isOpenAddModal,
+  closeAddModal,
+  setIsOpenAddModal,
   setQueryVersion,
+  setIsUpdating,
   isUpdating,
-}: IEditModal) => {
+}: IAddModal) => {
   const {
     register,
     formState: { errors },
     handleSubmit,
   } = useForm<IFormInput>();
+
   const onSubmit: SubmitHandler<IFormInput> = async (data) => {
     const { title, body } = data;
-
-    if (!title) return;
     setIsUpdating(true);
     try {
-      const { status } = await axiosInstance.put(
-        `/todos/${todoToEdit.id}`,
-        { data: { title, body } },
+      const { status } = await axiosInstance.post(
+        `/todos`,
+        { data: { title, body, user: userData.user.id } },
         {
           headers: {
             Authorization: `Bearer ${userData.jwt}`,
@@ -48,8 +46,9 @@ const EditModal = ({
         }
       );
       if (status === 200) {
-        closeEditModal();
-        setQueryVersion((prev) => prev + 1);
+        closeAddModal();
+        setQueryVersion((prev: number) => prev + 1);
+        toast.success("Todo Added Successfully!");
       }
     } catch (error) {
       console.log(error);
@@ -57,18 +56,14 @@ const EditModal = ({
       setIsUpdating(false);
     }
   };
+
   return (
-    <Modal
-      isOpen={isOpenEditModal}
-      closeModal={closeEditModal}
-      title="Edit Todo"
-    >
+    <Modal isOpen={isOpenAddModal} closeModal={closeAddModal} title="Add Todo">
       <form onSubmit={handleSubmit(onSubmit)}>
         <div className="space-y-3 mt-3">
           <div>
             <Input
               type="text"
-              defaultValue={todoToEdit.title}
               {...register("title", { required: true, minLength: 6 })}
             />
             {errors?.title && errors?.title.type === "required" && (
@@ -78,17 +73,17 @@ const EditModal = ({
               <InputErrorMsg msg="Title should be at least 6 characters" />
             )}
           </div>
-          <Textarea defaultValue={todoToEdit.body} />
+          <Textarea {...register("body")} />
         </div>
         <div className="mt-4 space-x-3">
           <Button isLoading={isUpdating} type="submit" size={"sm"}>
-            Update
+            Add
           </Button>
           <Button
             variant={"cancel"}
             type="reset"
             size={"sm"}
-            onClick={() => setIsOpenEditModal(false)}
+            onClick={() => setIsOpenAddModal(false)}
           >
             Cancel
           </Button>
@@ -98,4 +93,4 @@ const EditModal = ({
   );
 };
 
-export default EditModal;
+export default AddModal;
