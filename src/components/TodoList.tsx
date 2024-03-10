@@ -116,7 +116,8 @@ const TodoList = () => {
         )}
       </div>
       <div className="space-y-4">
-        {data?.todos.length ? (
+        {console.log(data)}
+        {data?.todos !== undefined && data?.todos.length !== undefined ? (
           data?.todos.map((todo: { id: number; title: string }) => (
             <div
               key={todo.id}
