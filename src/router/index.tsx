@@ -1,6 +1,6 @@
 import {
   Route,
-  createHashRouter,
+  createBrowserRouter,
   createRoutesFromElements,
 } from "react-router-dom";
 import ProtectedRoute from "../components/auth/ProtectedRoute";
@@ -15,7 +15,7 @@ import Todos from "../pages/Todos";
 
 const userData = JSON.parse(localStorage.getItem("loggedInUser")!);
 
-const router = createHashRouter(
+const router = createBrowserRouter(
   createRoutesFromElements(
     <>
       {/* Root Layout */}
